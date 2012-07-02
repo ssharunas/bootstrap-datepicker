@@ -27,12 +27,22 @@
 		this.language = options.language||this.element.data('date-language')||"en";
 		this.language = this.language in dates ? this.language : "en";
 		this.format = DPGlobal.parseFormat(options.format||this.element.data('date-format')||'mm/dd/yyyy');
-		this.picker = $(DPGlobal.template)
-							.appendTo('body')
-							.on({
-								click: $.proxy(this.click, this),
-								mousedown: $.proxy(this.mousedown, this)
-							});
+		this.isInline = this.element.is('div') && options.isInline;
+
+		if(this.isInline) {
+			this.picker = $(DPGlobal.template.replace("@classes@", "well datepicker-inline"))
+							.replaceAll(this.element);
+			this.picker.data('datepicker', this)
+		} else {
+			this.picker = $(DPGlobal.template.replace("@classes@", "dropdown-menu"))
+							.appendTo('body');
+		}
+
+		this.picker.on({
+						click: $.proxy(this.click, this),
+						mousedown: $.proxy(this.mousedown, this)
+					});
+
 		this.isInput = this.element.is('input');
 		this.component = this.element.is('.date') ? this.element.find('.add-on') : false;
 		if(this.component && this.component.length === 0)
@@ -45,7 +55,7 @@
 				keyup: $.proxy(this.update, this),
 				keydown: $.proxy(this.keydown, this)
 			});
-		} else {
+		} else if (!this.isInline) {
 			if (this.component){
 				// For components that are not readonly, allow keyboard nav
 				this.element.find('input').on({
@@ -105,20 +115,23 @@
 
 		show: function(e) {
 			this.picker.show();
-			this.height = this.component ? this.component.outerHeight() : this.element.outerHeight();
-			this.place();
-			$(window).on('resize', $.proxy(this.place, this));
-			if (e ) {
-				e.stopPropagation();
-				e.preventDefault();
+			if(!this.isInline)
+			{
+				this.height = this.component ? this.component.outerHeight() : this.element.outerHeight();
+				this.place();
+				$(window).on('resize', $.proxy(this.place, this));
+				if (e ) {
+					e.stopPropagation();
+					e.preventDefault();
+				}
+				if (!this.isInput) {
+					$(document).on('mousedown', $.proxy(this.hide, this));
+				}
+				this.element.trigger({
+					type: 'show',
+					date: this.date
+				});
 			}
-			if (!this.isInput) {
-				$(document).on('mousedown', $.proxy(this.hide, this));
-			}
-			this.element.trigger({
-				type: 'show',
-				date: this.date
-			});
 		},
 
 		_hide: function(e){
@@ -148,18 +161,21 @@
 
 		hide: function(e){
 			this.picker.hide();
-			$(window).off('resize', this.place);
-			this.viewMode = this.startViewMode;
-			this.showMode();
-			if (!this.isInput) {
-				$(document).off('mousedown', this.hide);
+			if(!this.isInline)
+			{
+				$(window).off('resize', this.place);
+				this.viewMode = this.startViewMode;
+				this.showMode();
+				if (!this.isInput) {
+					$(document).off('mousedown', this.hide);
+				}
+				if (e && e.currentTarget.value)
+					this.setValue();
+				this.element.trigger({
+					type: 'hide',
+					date: this.date
+				});
 			}
-			if (e && e.currentTarget.value)
-				this.setValue();
-			this.element.trigger({
-				type: 'hide',
-				date: this.date
-			});
 		},
 
 		setValue: function() {
@@ -769,7 +785,7 @@
 						'</thead>',
 		contTemplate: '<tbody><tr><td colspan="7"></td></tr></tbody>'
 	};
-	DPGlobal.template = '<div class="datepicker dropdown-menu">'+
+	DPGlobal.template = '<div class="datepicker @classes@" >'+
 							'<div class="datepicker-days">'+
 								'<table class=" table-condensed">'+
 									DPGlobal.headTemplate+

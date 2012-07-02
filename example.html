@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+	<meta charset="utf-8">
+	<title>Datepicker for Bootstrap, from Twitter</title>
+	<link href="http://www.eyecon.ro/bootstrap-datepicker/css/bootstrap.css" rel="stylesheet">
+	<link href="css/datepicker.css" rel="stylesheet">
+	
+	
+	
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<script src="js/bootstrap-datepicker.js"></script>
+	<script src="js/locales/bootstrap-datepicker.lt.js"></script>
+
+	
+	<style>
+	
+	</style>
+	
+  </head>
+
+<body>
+xxxxx
+	<div class="container">
+		<div class="input-append date" id="datepicker" data-date="12-02-2012">
+			asdf
+		</div>
+	
+		<input type="text" value="02/16/12" data-date-format="mm/dd/yy" id="datepicker2" >
+	</div>
+		<script>
+		$('#datepicker').datepicker({
+			format: 'mm-d-yyyy',
+			language: 'lt',
+			isInline: true
+		}).on('changeDate', function(ev){
+			opera.postError("clicked on: " + ev.date)
+		});;
+		
+		$('#datepicker2').datepicker();
+	</script>
+</body>
+</html>

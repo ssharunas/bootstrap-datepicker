@@ -7,6 +7,14 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  *
  */
+ 
+.datepicker-inline{
+  box-shadow: none;
+  display:block;
+  float: left;
+  background-color:white;
+}
+ 
 .datepicker {
   top: 0;
   left: 0;
