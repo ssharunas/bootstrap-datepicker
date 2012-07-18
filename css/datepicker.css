@@ -11,7 +11,6 @@
 .datepicker-inline{
   box-shadow: none;
   display:block;
-  float: left;
   background-color:white;
 }
  
@@ -64,11 +63,12 @@
 .datepicker table {
   width: 100%;
   margin: 0;
+  table-layout: fixed;
 }
 .datepicker td,
 .datepicker th {
   text-align: center;
-  width: 20px;
+  min-width: 20px;
   height: 20px;
   -webkit-border-radius: 4px;
   -moz-border-radius: 4px;
@@ -215,7 +215,7 @@
   color: #999999;
 }
 .datepicker th.switch {
-  width: 145px;
+  /*width: 145px;*/
 }
 .datepicker thead tr:first-child th {
   cursor: pointer;
