@@ -28,6 +28,11 @@
 		this.language = this.language in dates ? this.language : "en";
 		this.format = DPGlobal.parseFormat(options.format||this.element.data('date-format')||'mm/dd/yyyy');
 		this.isInline = this.element.is('div') && options.isInline;
+		this.selectionRange = options.selectionRange * 1 || 1;
+		
+		if(!(this.selectionRange == 1 || this.selectionRange == 5 || this.selectionRange == 7)){
+			throw "Specified range is not supported. Currently supported ranges are: 1,5,7."
+		}
 
 		if(this.isInline) {
 			this.picker = $(DPGlobal.template.replace("@classes@", "well datepicker-inline"))
@@ -115,8 +120,7 @@
 
 		show: function(e) {
 			this.picker.show();
-			if(!this.isInline)
-			{
+			if(!this.isInline) {
 				this.height = this.component ? this.component.outerHeight() : this.element.outerHeight();
 				this.place();
 				$(window).on('resize', $.proxy(this.place, this));
@@ -132,6 +136,11 @@
 					date: this.date
 				});
 			}
+		},
+		
+		setDate: function(date){
+			this.setValue(new Date(date));
+			this.update();
 		},
 
 		_hide: function(e){
@@ -161,8 +170,7 @@
 
 		hide: function(e){
 			this.picker.hide();
-			if(!this.isInline)
-			{
+			if(!this.isInline) {
 				$(window).off('resize', this.place);
 				this.viewMode = this.startViewMode;
 				this.showMode();
@@ -178,8 +186,11 @@
 			}
 		},
 
-		setValue: function() {
-			var formatted = DPGlobal.formatDate(this.date, this.format, this.language);
+		setValue: function(value) {
+			if(!value)
+				value = this.date;
+			
+			var formatted = DPGlobal.formatDate(value, this.format, this.language);
 			if (!this.isInput) {
 				if (this.component){
 					this.element.find('input').prop('value', formatted);
@@ -283,7 +294,8 @@
 				} else if (prevMonth.getFullYear() > year || (prevMonth.getFullYear() == year && prevMonth.getMonth() > month)) {
 					clsName += ' new';
 				}
-				if (prevMonth.valueOf() == currentDate) {
+				//if (prevMonth.valueOf() == currentDate) {
+				if (DPGlobal.isInRange(prevMonth.valueOf(), currentDate, this.selectionRange, this.weekStart)) {
 					clsName += ' active';
 				}
 				if (prevMonth.valueOf() < this.startDate || prevMonth.valueOf() > this.endDate) {
@@ -608,21 +620,34 @@
 			}
 			this.picker.find('>div').hide().filter('.datepicker-'+DPGlobal.modes[this.viewMode].clsName).show();
 			this.updateNavArrows();
+		},
+
+		selectionStartDay: function () {
+			return DPGlobal.lowerRange(new Date(this.date), this.selectionRange, this.weekStart);
+		},
+
+		selectionEndDay: function () {
+			return DPGlobal.upperRange(new Date(this.date), this.selectionRange, this.weekStart);
 		}
 	};
 
 	$.fn.datepicker = function ( option ) {
 		var args = Array.apply(null, arguments);
 		args.shift();
-		return this.each(function () {
+		var functionResult = null;
+		var result = this.each(function () {
 			var $this = $(this),
 				data = $this.data('datepicker'),
 				options = typeof option == 'object' && option;
 			if (!data) {
 				$this.data('datepicker', (data = new Datepicker(this, $.extend({}, $.fn.datepicker.defaults,options))));
 			}
-			if (typeof option == 'string') data[option].apply(data, args);
+			if (typeof option == 'string'){
+				functionResult = data[option].apply(data, args);
+			}
 		});
+		
+		return functionResult || result;
 	};
 
 	$.fn.datepicker.defaults = {
@@ -775,6 +800,37 @@
 				date.push(val[format.parts[i]]);
 			}
 			return date.join('');
+		},
+		lowerRange: function(date, selectionRange, weekStart){
+			switch(selectionRange){
+				case 1:
+					return date;
+				
+				case 5:
+				case 7:
+					return new Date(date).setHours(-24 * (((7 - weekStart) + date.getDay()) % 7));
+			}
+			
+			return null;
+		},
+		upperRange: function(date, selectionRange, weekStart){
+			switch(selectionRange){
+				case 1:
+					return date;
+				
+				case 5:
+					return new Date(date).setHours(-24 * (((7 - weekStart) + date.getDay()) % 7) + 24 * 4);
+					
+				case 7:
+					return new Date(date).setHours(24 * (6 - ((7 - weekStart) + date.getDay()) % 7));
+			}
+			
+			return null;
+		},
+		isInRange: function(date, rangeDatePoint, selectionRange, weekStart){
+			date = new Date(date);
+			rangeDatePoint = new Date(rangeDatePoint);
+			return this.lowerRange(rangeDatePoint, selectionRange, weekStart) <= date &&  date <= this.upperRange(rangeDatePoint, selectionRange, weekStart) ;
 		},
 		headTemplate: '<thead>'+
 							'<tr>'+

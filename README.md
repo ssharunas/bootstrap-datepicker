@@ -146,6 +146,12 @@ String.  Default: 'en'
 
 The two-letter code of the language to use for month and day names.  These will also be used as the input's value (and subsequently sent to the server in the case of form submissions).  Currently ships with English ('en'), German ('de'), Brazilian ('br'), and Spanish ('es') translations, but others can be added (see I18N below).  If an unknown language code is given, English will be used.
 
+### selectionRange
+
+Int. Default: 1
+
+Selection range specifies how much days will be selected in the calendar (whole week, one day, or 5 days from Monday to Friday). Currently supported values are: 1, 5 7.
+
 ## Markup
 
 Format a component.
@@ -214,6 +220,30 @@ Omit endDate (or provide an otherwise falsey value) to unset the limit.
 
     $('#datepicker').datepicker('setEndDate');
     $('#datepicker').datepicker('setEndDate', null);
+
+### setDate
+
+Arguments:
+
+* setDate (Date)
+
+Sets corrently selected date.
+
+    $('#datepicker').datepicker('setDate', new Date('2012-12-31'));
+
+## Methods
+
+### selectionStartDay
+
+Returns selected date according to selectionRange (lower range value).
+
+    $('#datepicker').datepicker('selectionStartDay');
+
+### selectionEndDay
+
+Returns selected date according to selectionRange (upper range value).
+
+    $('#datepicker').datepicker('selectionEndDay');
 
 ## Events
 

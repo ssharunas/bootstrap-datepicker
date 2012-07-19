@@ -17,17 +17,23 @@ inline:
 	<div class="container">
 		<div id="datepicker"></div>
 	</div>
+	<input type="button" onclick="today()" />
 	
 	<script>
-		$('#datepicker').datepicker({
+		var pick = $('#datepicker').datepicker({
 			format: 'mm-d-yyyy',
 			language: 'lt',
-			isInline: true
+			isInline: true,
+			selectionRange : 5
 		}).on('changeDate', function(ev){
 			opera.postError("clicked on: " + ev.date)
 		});;
 		
-		$('#datepicker2').datepicker();
+		// $('#datepicker2').datepicker();
+		
+		function today(){
+			pick.data("datepicker")
+		}
 	</script>
 </body>
 </html>
