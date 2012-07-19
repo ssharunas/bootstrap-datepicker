@@ -86,8 +86,15 @@
 		} else if ('dateAutoclose' in this.element.data()) {
 			this.autoclose = this.element.data('date-autoclose');
 		}
+        
+        this.keyboardNavigation = true;
+        if ('keyboardNavigation' in options) {
+            this.keyboardNavigation = options.keyboardNavigation;
+        } else if ('dateKeyboardNavigation' in this.element.data()) {
+            this.keyboardNavigation = this.element.data('date-keyboard-navigation');
+        }
 
-		switch(options.startView){
+		switch(options.startView || this.element.data('date-start-view')){
 			case 2:
 			case 'decade':
 				this.viewMode = this.startViewMode = 2;
@@ -122,6 +129,7 @@
 			this.picker.show();
 			if(!this.isInline) {
 				this.height = this.component ? this.component.outerHeight() : this.element.outerHeight();
+			this.update();
 				this.place();
 				$(window).on('resize', $.proxy(this.place, this));
 				if (e ) {
@@ -220,10 +228,14 @@
 		},
 
 		place: function(){
+			var zIndex = parseInt(this.element.parents().filter(function() {
+                          	return $(this).css('z-index') != 'auto';
+                        }).first().css('z-index'))+10;		
 			var offset = this.component ? this.component.offset() : this.element.offset();
 			this.picker.css({
 				top: offset.top + this.height,
-				left: offset.left
+				left: offset.left,
+				zIndex: zIndex
 			});
 		},
 
@@ -440,9 +452,17 @@
 							if (target.is('.month')) {
 								var month = target.parent().find('span').index(target);
 								this.viewDate.setMonth(month);
+								this.element.trigger({
+									type: 'changeMonth',
+									date: this.viewDate
+								});
 							} else {
 								var year = parseInt(target.text(), 10)||0;
 								this.viewDate.setFullYear(year);
+								this.element.trigger({
+									type: 'changeYear',
+									date: this.viewDate
+								});
 							}
 							this.showMode(-1);
 							this.fill();
@@ -543,6 +563,10 @@
 			return this.moveMonth(date, dir*12);
 		},
 
+		dateWithinRange: function(date){
+			return date >= this.startDate && date <= this.endDate;
+		},
+
 		keydown: function(e){
 			if (this.picker.is(':not(:visible)')){
 				if (e.keyCode == 27) // allow escape to hide and re-show picker
@@ -550,7 +574,8 @@
 				return;
 			}
 			var dateChanged = false,
-				dir, day, month;
+				dir, day, month,
+				newDate, newViewDate;
 			switch(e.keyCode){
 				case 27: // escape
 					this.hide();
@@ -558,39 +583,53 @@
 					break;
 				case 37: // left
 				case 39: // right
+                    if (!this.keyboardNavigation) break;
 					dir = e.keyCode == 37 ? -1 : 1;
 					if (e.ctrlKey){
-						this.date = this.moveYear(this.date, dir);
-						this.viewDate = this.moveYear(this.viewDate, dir);
+						newDate = this.moveYear(this.date, dir);
+						newViewDate = this.moveYear(this.viewDate, dir);
 					} else if (e.shiftKey){
-						this.date = this.moveMonth(this.date, dir);
-						this.viewDate = this.moveMonth(this.viewDate, dir);
+						newDate = this.moveMonth(this.date, dir);
+						newViewDate = this.moveMonth(this.viewDate, dir);
 					} else {
-						this.date.setDate(this.date.getDate() + dir);
-						this.viewDate.setDate(this.viewDate.getDate() + dir);
+						newDate = new Date(this.date);
+						newDate.setDate(this.date.getDate() + dir);
+						newViewDate = new Date(this.viewDate);
+						newViewDate.setDate(this.viewDate.getDate() + dir);
 					}
+					if (this.dateWithinRange(newDate)){
+						this.date = newDate;
+						this.viewDate = newViewDate;
 					this.setValue();
 					this.update();
 					e.preventDefault();
 					dateChanged = true;
+					}
 					break;
 				case 38: // up
 				case 40: // down
+                    if (!this.keyboardNavigation) break;
 					dir = e.keyCode == 38 ? -1 : 1;
 					if (e.ctrlKey){
-						this.date = this.moveYear(this.date, dir);
-						this.viewDate = this.moveYear(this.viewDate, dir);
+						newDate = this.moveYear(this.date, dir);
+						newViewDate = this.moveYear(this.viewDate, dir);
 					} else if (e.shiftKey){
-						this.date = this.moveMonth(this.date, dir);
-						this.viewDate = this.moveMonth(this.viewDate, dir);
+						newDate = this.moveMonth(this.date, dir);
+						newViewDate = this.moveMonth(this.viewDate, dir);
 					} else {
-						this.date.setDate(this.date.getDate() + dir * 7);
-						this.viewDate.setDate(this.viewDate.getDate() + dir * 7);
+						newDate = new Date(this.date);
+						newDate.setDate(this.date.getDate() + dir * 7);
+						newViewDate = new Date(this.viewDate);
+						newViewDate.setDate(this.viewDate.getDate() + dir * 7);
 					}
+					if (this.dateWithinRange(newDate)){
+						this.date = newDate;
+						this.viewDate = newViewDate;
 					this.setValue();
 					this.update();
 					e.preventDefault();
 					dateChanged = true;
+					}
 					break;
 				case 13: // enter
 					this.hide();
@@ -642,7 +681,7 @@
 			if (!data) {
 				$this.data('datepicker', (data = new Datepicker(this, $.extend({}, $.fn.datepicker.defaults,options))));
 			}
-			if (typeof option == 'string'){
+			if (typeof option == 'string' && typeof data[option] == 'function') {
 				functionResult = data[option].apply(data, args);
 			}
 		});
@@ -862,4 +901,4 @@
 							'</div>'+
 						'</div>';
 
-}( window.jQuery )
+}( window.jQuery );
